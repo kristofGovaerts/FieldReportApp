@@ -52,8 +52,9 @@ ui <- shinyUI(fluidPage(
 
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
+  adata <- reactiveValues()
   
-  data <- reactive({ 
+  observe({ 
     req(input$file1) ## ?req #  require that the input is available
     
     inFile <- input$file1 
@@ -68,10 +69,10 @@ server <- shinyServer(function(input, output, session) {
     series <- levels(as.factor(df$'Series Id'))
     updateCheckboxGroupInput(session, inputId = 'seriesL',
                              choices = series, selected = series)
-    return(df)
+    adata$df1 <- df
   })
   
-  data2 <- reactive({ 
+  observe({ 
     req(input$file2)
     inFile2 <- input$file2
     if (tools::file_ext(inFile2$datapath) %in% c('xls', 'xlsx')) {
@@ -81,38 +82,71 @@ server <- shinyServer(function(input, output, session) {
                         header=TRUE, stringsAsFactors = FALSE)
     } else {print('Wrong file type.')}
 
+    adata$df2 <- df2
+  })
+  
+  observe({
+    req(adata$df1)
+    series <- levels(as.factor(adata$df1$'Series Id'))
+    updateCheckboxGroupInput(session, inputId = 'seriesL',
+                             choices = series, selected = series)
+  })
+  
+  observe({
+    req(adata$df2)
+    df2 <- adata$df2
     times <- levels(as.factor(df2$time))
     pl <- data_columns(df2)
     pars <- pl[[1]]
     types <- pl[[2]]
-
+    
     updateCheckboxGroupInput(session, inputId = 'timesL',
                              choices = times, selected = times)
     updateCheckboxGroupInput(session, inputId = 'parsL',
                              choices = pars, selected = pars)
     updateSelectInput(session, inputId = 'typesL',
-                             choices = types, selected = c('mean'))
-    updateSelectInput(session, inputId = 'ppar',
-                      choices = paste(pars, input$typesL, sep='_'), selected = pars[1])
-    updateSelectInput(session, inputId = 'stime',
-                      choices = times, selected = times[1])
-    
-    return(df2)
+                      choices = types, selected = c('mean'))
+    adata$times <- times
+    adata$pars <- pars
+    adata$types <- types
   })
-
-   output$fragplot <- renderPlot({
-     fm <- data()
-     fp <- data2()
-     sl <- input$seriesL
-     ddata <- prepare_data(fm, fp)
-     
-     plot_fieldmap(fm, sl)
+  
+  observe({
+    req(adata$pars)
+    c_pars <- paste(adata$pars, input$typesL, sep='_')
+    updateSelectInput(session, inputId = 'ppar', 
+                      choices = c_pars, selected=c_pars[1])
+    updateSelectInput(session, inputId = 'stime',
+                      choices = adata$times, selected=adata$times[1])
+  })
+  
+  observe({
+    req(adata$df1, adata$df2)
+    adata$ddata <- prepare_data(adata$df1, adata$df2)
+  })
+  
+  output$fragplot <- renderPlot({
+    req(adata$df1)
+    fm <- adata$df1
+    sl <- input$seriesL
+    
+    plot_fieldmap(fm, sl)
   }, width=1200, height=800)
-   
-   output$Fcheckplot <- renderPlot({
-     plot_data_column(ddata, input$ppar, as.numeric(input$stime))
-     plot_checks(ddata, input$ppar)
-   })
+  
+  output$Fdataplot <- renderPlot({
+    req(adata$ddata)
+    ddata <- adata$ddata
+
+    plot_data_column(ddata, input$ppar, as.numeric(input$stime))
+  })
+  
+  output$Fcheckplot <- renderPlot({
+    req(adata$ddata)
+    ddata <- adata$ddata
+    print(as.numeric(input$stime))
+
+    plot_checks(ddata, input$ppar)
+  })
    })
 
 shinyApp(ui, server)
