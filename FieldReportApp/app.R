@@ -43,7 +43,9 @@ ui <- shinyUI(fluidPage(
                             selectInput('ppar', 'Parameter to plot:', choices = NULL, selected = NULL),
                             selectInput('stime', 'Timepoint to plot:', choices = NULL, selected = NULL),
                             plotOutput("Fdataplot"),
-                            plotOutput("Fcheckplot"))
+                            plotOutput("Fcheckplot")),
+                   tabPanel("Data processing", 
+                            tags$br())
                  )
                  )
                )
@@ -138,15 +140,13 @@ server <- shinyServer(function(input, output, session) {
     ddata <- adata$ddata
 
     plot_data_column(ddata, input$ppar, as.numeric(input$stime))
-  })
+  }, width=400, height=400)
   
   output$Fcheckplot <- renderPlot({
     req(adata$ddata)
-    ddata <- adata$ddata
-    print(as.numeric(input$stime))
-
+    ddata <- subset(adata$ddata, time %in% input$timesL)
     plot_checks(ddata, input$ppar)
-  })
+  }, width=400, height=400)
    })
 
 shinyApp(ui, server)
