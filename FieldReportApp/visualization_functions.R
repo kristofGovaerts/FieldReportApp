@@ -38,9 +38,9 @@ plot_checks <- function(ddata, par) {
 
 plot_data_column <- function (data, column, timepoint) {
   pd <- subset(data, time==timepoint)
-  limits = c(min(pd[par]), max(pd[par]))
+  limits = c(min(pd[column]), max(pd[column]))
   midpoint = mean(limits)
-  p <- ggplot(data=pd, aes_string(x='X', y='Y', fill=column)) + geom_tile() + ggtitle(paste("Parameter:", column, "Timepoint:", timepoint)) + 
+  p <- ggplot(data=pd, aes_string(x='X', y='Y', fill=column)) + geom_tile() + ggtitle(paste("Parameter:", column, "Timepoint:", toString(timepoint))) + 
     scale_fill_gradient2(midpoint=midpoint, limits=limits, low=colors[1], mid=colors[2], high=colors[3], na.value='white') +
     theme(panel.background = element_blank())
   print(p)

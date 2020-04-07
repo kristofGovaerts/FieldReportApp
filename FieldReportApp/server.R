@@ -5,53 +5,6 @@
 #April 2020.
 #Kristof Govaerts, SESVanderhave.
 
-library(shiny)
-library(readxl)
-
-options(shiny.maxRequestSize = 30*1024^2) #upload size = 30MB
-
-source('visualization_functions.R')
-source('data_functions.R')
-
-ui <- shinyUI(fluidPage(
-  tags$style(type="text/css",
-             ".shiny-output-error { visibility: hidden; }",
-             ".shiny-output-error:before { visibility: hidden; }"
-  ), #suppress warning messages
-  titlePanel("Field report"),
-             sidebarLayout(
-               sidebarPanel(
-                 fileInput('file1', 'Field ebook',
-                           accept=c('.xlsx', '.xls', '.csv', '.txt')),
-                 fileInput('file2', 'Plot data',
-                           accept=c('.xlsx', '.xls', '.csv', '.txt')),
-                 tags$br(),
-                 fluidRow(column(4,
-                                 checkboxGroupInput('seriesL', 'Series: ', choices = NULL, selected = NULL),
-                                 checkboxGroupInput('timesL', 'Timepoints: ', choices = NULL, selected = NULL)
-                        ),
-                 column(4, offset=2,
-                        checkboxGroupInput('parsL', 'Parameters: ', choices = NULL, selected = NULL),
-                        selectInput('typesL', 'Statistic: ', choices = NULL, selected = NULL)
-                        )
-                 ),
-               ),
-               mainPanel(
-                 tabsetPanel(
-                   tabPanel("Fieldmap", plotOutput("fragplot")),
-                   tabPanel("Field data", 
-                            selectInput('ppar', 'Parameter to plot:', choices = NULL, selected = NULL),
-                            selectInput('stime', 'Timepoint to plot:', choices = NULL, selected = NULL),
-                            plotOutput("Fdataplot"),
-                            plotOutput("Fcheckplot")),
-                   tabPanel("Data processing", 
-                            tags$br())
-                 )
-                 )
-               )
-   )
-  )
-
 server <- shinyServer(function(input, output, session) {
   # added "session" because updateSelectInput requires it
   adata <- reactiveValues()
@@ -83,7 +36,7 @@ server <- shinyServer(function(input, output, session) {
       df2 <- read.table(inFile2$datapath, sep="\t", dec=".", 
                         header=TRUE, stringsAsFactors = FALSE)
     } else {print('Wrong file type.')}
-
+    
     adata$df2 <- df2
   })
   
@@ -138,7 +91,10 @@ server <- shinyServer(function(input, output, session) {
   output$Fdataplot <- renderPlot({
     req(adata$ddata)
     ddata <- adata$ddata
-
+    print(input$ppar)
+    print(input$stime)
+    print(colnames(ddata))
+    
     plot_data_column(ddata, input$ppar, as.numeric(input$stime))
   }, width=400, height=400)
   
@@ -147,6 +103,4 @@ server <- shinyServer(function(input, output, session) {
     ddata <- subset(adata$ddata, time %in% input$timesL)
     plot_checks(ddata, input$ppar)
   }, width=400, height=400)
-   })
-
-shinyApp(ui, server)
+})
