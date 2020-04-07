@@ -2,13 +2,13 @@ library(readxl)
 library(ggplot2)
 library(scales)
 library(colormap)
+library(ggpubr)
+
+colors <- c(colormap()[1], colormap()[36], colormap()[72]) #the lowest, middle and highest colors of the viridis colormap
 
 #necessary formatting in ebook: 
 #series ID = 'Series Id'
 #field ID = 'Field Id'
-
-fefile <- "C:\\Users\\Kristof\\Desktop\\SESVanderhave_DroneData\\LEC901\\F_LEC901 CERCO.xlsx" #field ebook
-fe <- read_excel(fefile)
 
 plot_fieldmap <- function (febook, include='ALL'){
   febt <- data.frame(febook)
@@ -27,4 +27,21 @@ plot_fieldmap <- function (febook, include='ALL'){
     scale_y_continuous(breaks=pretty_breaks(n = 10)) + scale_x_continuous(breaks=pretty_breaks(n = 10)) +
     theme(panel.background = element_blank(), legend.position = 'none')
   return(p)
+}
+
+plot_checks <- function(ddata, par) {
+  cd <- subset(ddata, standard == 'Y')
+  cd$seedname <- droplevels(cd$seedname)
+  cd <- cd[!is.na(cd[par]),] #remove empties
+  print(ggline(data=cd, x='time', y=par, add = c("median_iqr"), color = "seedname", palette = "jco", numeric.x.axis=T))
+}
+
+plot_data_column <- function (data, column, timepoint) {
+  pd <- subset(data, time==timepoint)
+  limits = c(min(pd[par]), max(pd[par]))
+  midpoint = mean(limits)
+  p <- ggplot(data=pd, aes_string(x='X', y='Y', fill=column)) + geom_tile() + ggtitle(column) + 
+    scale_fill_gradient2(midpoint=midpoint, limits=limits, low=colors[1], mid=colors[2], high=colors[3], na.value='white') +
+    theme(panel.background = element_blank())
+  print(p)
 }
