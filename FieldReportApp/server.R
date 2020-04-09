@@ -114,7 +114,7 @@ server <- shinyServer(function(input, output, session) {
   
   output$Fcheckplot <- renderPlot({
     req(adata$ddata)
-    ddata <- subset(adata$ddata, time %in% input$timesL)
+    ddata <- subset(adata$ddata, (time %in% input$timesL) & (series %in% as.numeric(input$seriesL)))
     plot_checks(ddata, input$ppar)
   }, width=400, height=400)
   
@@ -124,8 +124,10 @@ server <- shinyServer(function(input, output, session) {
     print("Running SpATS")
     print(input$timesL)
     print(pl)
+    print(input$seriesL)
     print(input$GaR)
-    adata$spats <- spats_all(ddata, input$timesL, pl, gar = input$GaR)
+    ss <- subset(adata$ddata, series %in% as.numeric(input$seriesL))
+    adata$spats <- spats_all(ss, input$timesL, pl, gar = input$GaR)
   })
   
   output$spatsplots <- renderPlot({

@@ -2,6 +2,7 @@ library(readxl)
 library(ggplot2)
 library(scales)
 library(colormap)
+library(SpATS)
 
 #necessary formatting in ebook: 
 #series ID = 'Series Id'
@@ -26,6 +27,7 @@ prepare_data <- function(febook, fdata) {
   ddata$seedname[is.na(ddata$seedname)] <- "NA"
   ddata$Seed <- as.factor(ddata$seedname)
   ddata$standard <- as.factor(ddata$'Standard Ind')
+  ddata$series <- ddata$'Series Id'
   return(ddata)
 }
 
