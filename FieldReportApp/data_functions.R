@@ -28,3 +28,24 @@ prepare_data <- function(febook, fdata) {
   ddata$standard <- as.factor(ddata$'Standard Ind')
   return(ddata)
 }
+
+spats_field <- function(df, tps, par, genotype='Seed', X='X', Y='Y', Xf='Xf', Yf='Yf', gar=TRUE, nseg=c(15,15)) {
+  cov_spats  <- list() #empty list
+  
+  for (i in 1:length(tps)) {
+    d <- subset(df, time==tps[i])
+    b <-SpATS(response = par, genotype = genotype, spatial = ~PSANOVA(X,Y,nseg=nseg), 
+              random = ~Xf + Yf, data=d, genotype.as.random=gar)
+    cov_spats[[tps[i]]] <- b
+  }
+  return(cov_spats)
+}
+
+spats_all <- function(df, tps, pars, genotype='Seed', X='X', Y='Y', Xf='Xf', Yf='Yf', gar=TRUE, nseg=c(15,15)) {
+  asl <- list()
+  for (i in 1:length(pars)) {
+    sf <- spats_field(df, tps, pars[i], genotype=genotype, X=X, Y=Y, Xf=Xf, Yf=Yf, gar=gar, nseg=nseg)
+    asl[[pars[i]]] <- sf
+  }
+  return(asl)
+}

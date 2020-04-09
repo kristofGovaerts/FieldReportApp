@@ -17,7 +17,7 @@ server <- shinyServer(function(input, output, session) {
     if (tools::file_ext(inFile$datapath) %in% c('xls', 'xlsx')) {
       df <- read_excel(inFile$datapath)
     } else if (tools::file_ext(inFile$datapath) %in% c('txt', 'csv')) {
-      df <- read.table(inFile$datapath, sep="", dec=".", 
+      df <- read.table(inFile$datapath, sep="\t", dec=".", 
                        header=TRUE, stringsAsFactors = FALSE)
     } else {print('Wrong file type.')}
     
@@ -80,6 +80,15 @@ server <- shinyServer(function(input, output, session) {
     adata$ddata <- prepare_data(adata$df1, adata$df2)
   })
   
+  observe({
+    req(adata$spats)
+    pl <- paste(input$parsL, input$typesL, sep='_')
+    updateSelectInput(session, inputId = 'spatspar',
+                      choices = pl, selected=pl[1])
+    updateSelectInput(session, inputId = 'spatstime',
+                      choices = input$timesL, selected=input$timesL[1])
+  })
+  
   output$fragplot <- renderPlot({
     req(adata$df1)
     fm <- adata$df1
@@ -88,13 +97,18 @@ server <- shinyServer(function(input, output, session) {
     plot_fieldmap(fm, sl)
   }, width=1200, height=800)
   
+  output$spatstext <- renderText({
+    s1 <- paste("Timepoints selected:", list(input$timesL))
+    s2 <- paste("Parameters selected:", list(input$parsL))
+    s3 <- paste("Field dimensions:", max(adata$ddata$X) - min(adata$ddata$X), "x", max(adata$ddata$Y) - min(adata$ddata$Y))
+    s4 <- paste("Total SpATS analyses:", length(input$timesL) * length(input$parsL))
+    HTML(paste(s1,s2,s3,s4, sep = '<br/>'))
+  })
+  
   output$Fdataplot <- renderPlot({
     req(adata$ddata)
     ddata <- adata$ddata
-    print(input$ppar)
-    print(input$stime)
-    print(colnames(ddata))
-    
+
     plot_data_column(ddata, input$ppar, as.numeric(input$stime))
   }, width=400, height=400)
   
@@ -103,4 +117,25 @@ server <- shinyServer(function(input, output, session) {
     ddata <- subset(adata$ddata, time %in% input$timesL)
     plot_checks(ddata, input$ppar)
   }, width=400, height=400)
+  
+  observeEvent(input$sspats, {
+    req(adata$ddata)
+    pl <- paste(input$parsL, input$typesL, sep='_')
+    print("Running SpATS")
+    print(input$timesL)
+    print(pl)
+    print(input$GaR)
+    adata$spats <- spats_all(ddata, input$timesL, pl, gar = input$GaR)
+  })
+  
+  output$spatsplots <- renderPlot({
+    req(adata$spats)
+    plot(adata$spats[[input$spatspar]][[input$spatstime]])
+  })
+  
+  output$herit <- renderText({
+    if (input$GaR == TRUE) {
+      paste("Heritability:", getHeritability(adata$spats[[input$spatspar]][[input$spatstime]]))
+    } else {paste("Can't calculate heritability if genotypes not included as random effects.")}
+  })
 })

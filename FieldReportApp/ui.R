@@ -1,6 +1,7 @@
 #Application was created using Shiny. Run in RStudio using the 'Run App' button.
 #Currently only able to load a field map and visualize series in two dimensions.
 #Intent is to create a dynamic field report generator.
+#Output will be saved in the same folder as the second input file
 #
 #April 2020.
 #Kristof Govaerts, SESVanderhave.
@@ -36,10 +37,21 @@ ui <- shinyUI(fluidPage(
                  selectInput('stime', 'Timepoint to plot:', choices = NULL, selected = NULL),
                  plotOutput("Fdataplot"),
                  plotOutput("Fcheckplot")),
-        tabPanel("Data processing", 
+        tabPanel("Data processing",
+                 checkboxInput("GaR", "Genotype as random?", value=TRUE),
+                 htmlOutput("spatstext"),
+                 tags$br(),
+                 actionButton("sspats", "Start SpATS"),
                  tags$br()),
         tabPanel("SPATS output",
-                 tags$br())
+                 tags$br(),
+                 selectInput('spatspar', "Parameter:", choices = NULL, selected = NULL),
+                 selectInput('spatstime', "Timepoint:", choices = NULL, selected = NULL),
+                 plotOutput("spatsplots"),
+                 tags$br(),
+                 textOutput("herit"),
+                 tags$br(),
+                 actionButton("fsave", "Save predicted values"))
       )
     )
   )
