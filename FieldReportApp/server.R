@@ -98,11 +98,12 @@ server <- shinyServer(function(input, output, session) {
   }, width=1200, height=800)
   
   output$spatstext <- renderText({
+    s0 <- paste("Number of unique seednames:", length(levels(adata$ddata$Seed)))
     s1 <- paste("Timepoints selected:", list(input$timesL))
     s2 <- paste("Parameters selected:", list(input$parsL))
     s3 <- paste("Field dimensions:", max(adata$ddata$X) - min(adata$ddata$X), "x", max(adata$ddata$Y) - min(adata$ddata$Y))
     s4 <- paste("Total SpATS analyses:", length(input$timesL) * length(input$parsL))
-    HTML(paste(s1,s2,s3,s4, sep = '<br/>'))
+    HTML(paste(s0, s1,s2,s3,s4, sep = '<br/>'))
   })
   
   output$Fdataplot <- renderPlot({
@@ -139,5 +140,18 @@ server <- shinyServer(function(input, output, session) {
     if (input$GaR == TRUE) {
       paste("Heritability:", getHeritability(adata$spats[[input$spatspar]][[input$spatstime]]))
     } else {paste("Can't calculate heritability if genotypes not included as random effects.")}
+  })
+  
+  observeEvent(input$fsave, {
+    req(adata$spats)
+    spatslist <- adata$spats
+    spats_raw <- consolidate_spatslist(spatslist)
+    spats_temp <- to_long(spats_raw)
+    spats_auc <- to_aucs(spats_raw)
+    ofn <- paste(dirname(input$file1$datapath), 'SPATS_output.xlsx', sep='/')
+    print("Saving to:")
+    print(ofn)
+    olist <- list("Raw" = spats_raw, "Preds" = spats_temp, "AUDPC" = spats_auc)
+    write.xlsx(olist, ofn)
   })
 })

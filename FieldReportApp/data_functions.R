@@ -3,6 +3,9 @@ library(ggplot2)
 library(scales)
 library(colormap)
 library(SpATS)
+library(dplyr)
+library(tidyr)
+library(purrr)
 
 #necessary formatting in ebook: 
 #series ID = 'Series Id'
@@ -18,8 +21,9 @@ data_columns <- function(plotdata) {
 }
 
 prepare_data <- function(febook, fdata) {
-  febook$seedname <- droplevels(as.factor(febook$`Seed Name`))
+  febook$seedname <- as.factor(febook$`Seed Name`)
   ddata <- merge(febook, fdata, by=c('X', 'Y'), all.y=T)
+  ddata$seedname <- droplevels(ddata$seedname)
   ddata$xy <- interaction(ddata$X, ddata$Y)
   ddata$time_f <- as.factor(ddata$time)
   ddata$Xf <- as.factor(ddata$X)
@@ -51,3 +55,82 @@ spats_all <- function(df, tps, pars, genotype='Seed', X='X', Y='Y', Xf='Xf', Yf=
   }
   return(asl)
 }
+
+fspats_to_BLUE <- function(fspats) {
+  df <- data.frame(levels(as.factor(fspats[[1]]$data$Seed)))
+  colnames(df) <- c('seedname')
+  resp <- fspats[[1]]$model$response
+  gar <- fspats[[1]]$model$geno$as.random
+  
+  for (i in 1:length(fspats)){
+    t <- fspats[[i]]$data$time[1]
+    str <- paste(resp, t, 'BLUE', sep='_')
+    blue <- data.frame(fspats[[i]]$coeff[df$seedname])
+    
+    blue$seedname <- rownames(blue)
+    colnames(blue) <- c(str, 'seedname')
+    df <- merge(df, blue, by='seedname', all.x=T)
+  }
+  return(df)
+}
+
+fspats_to_pred <- function(fspats, par=NA) {
+  for (i in 1:length(fspats)){
+    spats <- fspats[[i]]
+    tp <- as.character(spats$data$time[1]) #get tp - normally just one identical for each cell
+    if (is.na(par)) {par <- spats$model$response}
+    
+    p <- predict(spats, which='Seed')[,c('Seed', 'predicted.values','standard.errors')]
+    colnames(p) <- c('seedname', paste(par, tp, 'pred', sep='_'), paste(par, tp, 'se', sep='_'))
+    if (i != 1){
+      out <- merge(out, p, by='seedname', all=T)
+    } else {out <- p}
+  }
+  return(out)
+}
+
+consolidate_spatslist <- function(spatslist, type="pred") {
+  #type = "pred" or "blu*". note that blu* is BLUE if genotype != random, BLUP otherwise
+  outdf <- data.frame(levels(spatslist[[1]][[1]]$data$Seed)) #data frame should be the same for all spats
+  colnames(outdf) <- c('seedname')
+  for (i in 1:length(spatslist)) {
+    if (type == "pred") {
+    outdf <- merge(outdf, fspats_to_pred(spatslist[[i]]), by='seedname', all.y=T)
+    } else if (type == "blu*") {
+      outdf <- merge(outdf, fspats_to_BLUE(spatslist[[i]]), by='seedname', all.y=T)
+    } else {print("Error: type not understood.")}
+  }
+  return(outdf)
+}
+
+#next = generate AUCs
+norm_AUC <- function(time, par) {
+  auc <- DescTools::AUC(time, par, method="trapezoid")
+  t <- max(time) - min(time)
+  return(auc/t)
+}
+
+to_long <- function(spatsres) {
+  inds <- grep(paste('seedname|pred|BLUE', sep=''), colnames(spatsres))
+  
+  #Here we pivot the input data frame in two steps: 
+  #1. Into LONG format (names = seedname, par, time, type, value)
+  #2. Widen column 'par' so we have a column per parameter
+  spatsres[,inds] %>%
+    pivot_longer(-seedname, names_to=c("par", "time", "type"), names_pattern=c("(.*_*)_(.*)_(.*)"), values_to='value') %>%
+    pivot_wider(names_from='par') -> spats_long
+  return(spats_long)
+  }
+
+to_aucs <- function(spatsres) {
+  inds <- grep(paste('seedname|pred|BLUE', sep=''), colnames(spatsres))
+  
+  #here we generate AUCs
+  spatsres[,inds] %>%
+    pivot_longer(-seedname, names_to=c("par", "time", "type"), names_pattern=c("(.*_*)_(.*)_(.*)"), values_to='value') %>%
+    group_by(par, seedname) %>%
+    dplyr::summarize(AUC = norm_AUC(as.numeric(time), value)) %>%
+    ungroup %>%
+    pivot_wider(names_from='par', values_from='AUC') -> spats_auc
+  return(spats_auc)
+  }
