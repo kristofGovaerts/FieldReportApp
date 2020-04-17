@@ -6,6 +6,7 @@ library(SpATS)
 library(dplyr)
 library(tidyr)
 library(purrr)
+library(scales)
 
 #necessary formatting in ebook: 
 #series ID = 'Series Id'
@@ -134,3 +135,14 @@ to_aucs <- function(spatsres) {
     pivot_wider(names_from='par', values_from='AUC') -> spats_auc
   return(spats_auc)
   }
+
+rescale_col <- function(col, r=c(1,9)) {
+  fn <- function(x) (((max(r)-min(r))/(max(col)-min(col)))*((x-max(col))))+max(r)
+  return(sapply(col, fn))
+}
+
+rescale_pars <- function(df, cols, r=c(1,9)) {
+  nc <- sapply(df[,cols], function(x) rescale_col(x, r=r))
+  colnames(nc) <- paste(colnames(nc), '_scaled', sep='')
+  return(nc)
+}
