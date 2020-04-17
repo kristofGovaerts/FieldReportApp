@@ -141,8 +141,8 @@ rescale_col <- function(col, r=c(1,9)) {
   return(sapply(col, fn))
 }
 
-rescale_pars <- function(df, cols, r=c(1,9)) {
-  nc <- sapply(df[,cols], function(x) rescale_col(x, r=r))
+rescale_pars <- function(df, r=c(1,9)) {
+  nc <- sapply(df, function(x) rescale_col(x, r=r))
   colnames(nc) <- paste(colnames(nc), '_scaled', sep='')
   return(nc)
 }
