@@ -1,7 +1,3 @@
-library(readxl)
-library(ggplot2)
-library(scales)
-library(colormap)
 library(SpATS)
 library(dplyr)
 library(tidyr)

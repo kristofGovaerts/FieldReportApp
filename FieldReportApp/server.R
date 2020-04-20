@@ -142,7 +142,7 @@ server <- shinyServer(function(input, output, session) {
     } else {paste("Can't calculate heritability if genotypes not included as random effects.")}
   })
   
-  observeEvent(input$fsave, {
+  outputfile <- reactive({
     req(adata$spats)
     spatslist <- adata$spats
     spats_raw <- consolidate_spatslist(spatslist)
@@ -154,6 +154,13 @@ server <- shinyServer(function(input, output, session) {
     print("Saving to:")
     print(ofn)
     olist <- list("Raw" = spats_raw, "Preds" = spats_temp, "AUDPC" = spats_auc)
-    write.xlsx(olist, ofn)
+    return(olist)
   })
+  
+  output$downl <- downloadHandler(
+    filename = 'SPATS_output.xlsx',
+    content = function(file) {
+      olist <- outputfile()
+      write.xlsx(olist, file)
+    })
 })

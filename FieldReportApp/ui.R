@@ -51,7 +51,7 @@ ui <- shinyUI(fluidPage(
                  tags$br(),
                  textOutput("herit"),
                  tags$br(),
-                 actionButton("fsave", "Save predicted values"))
+                 downloadButton('downl', label='Save predicted values'))
       )
     )
   )

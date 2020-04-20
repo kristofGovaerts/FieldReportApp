@@ -6,7 +6,6 @@
 #Kristof Govaerts, SESVanderhave.
 
 library(shiny)
-library(readxl)
 library(openxlsx)
 
 options(shiny.maxRequestSize = 30*1024^2) #upload size = 30MB
