@@ -78,6 +78,9 @@ server <- shinyServer(function(input, output, session) {
   observe({
     req(adata$df1, adata$df2)
     adata$ddata <- prepare_data(adata$df1, adata$df2)
+    dims <-  c(max(adata$ddata$X) - min(adata$ddata$X), max(adata$ddata$Y) - min(adata$ddata$Y))
+    adata$dims <- dims
+    adata$segs <- sapply(dims, function(x) if (x<9) {3} else if (x>45) {15} else {round(x/3)})
   })
   
   observe({
@@ -101,9 +104,10 @@ server <- shinyServer(function(input, output, session) {
     s0 <- paste("Number of unique seednames:", length(levels(adata$ddata$Seed)))
     s1 <- paste("Timepoints selected:", list(input$timesL))
     s2 <- paste("Parameters selected:", list(input$parsL))
-    s3 <- paste("Field dimensions:", max(adata$ddata$X) - min(adata$ddata$X), "x", max(adata$ddata$Y) - min(adata$ddata$Y))
-    s4 <- paste("Total SpATS analyses:", length(input$timesL) * length(input$parsL))
-    HTML(paste(s0, s1,s2,s3,s4, sep = '<br/>'))
+    s3 <- paste("Field dimensions:", adata$dims[1], "x", adata$dims[2])
+    s4 <- paste("SpATS segments:", list(adata$segs))
+    s5 <- paste("Total SpATS analyses:", length(input$timesL) * length(input$parsL))
+    HTML(paste(s0, s1,s2,s3,s4,s5, sep = '<br/>'))
   })
   
   output$Fdataplot <- renderPlot({
@@ -127,8 +131,11 @@ server <- shinyServer(function(input, output, session) {
     print(pl)
     print(input$seriesL)
     print(input$GaR)
-    ss <- subset(adata$ddata, series %in% as.numeric(input$seriesL))
-    adata$spats <- spats_all(ss, input$timesL, pl, gar = input$GaR)
+    if (length(input$seriesL) != length(levels(as.factor(adata$ddata$series)))) {
+      ss <- subset(adata$ddata, series %in% as.numeric(input$seriesL))} else {
+        ss <- data.frame(adata$ddata)}
+    
+    adata$spats <- spats_all(ss, input$timesL, pl, gar = input$GaR, nseg = adata$segs)
   })
   
   output$spatsplots <- renderPlot({

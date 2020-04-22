@@ -19,8 +19,9 @@ data_columns <- function(plotdata) {
 
 prepare_data <- function(febook, fdata) {
   febook$seedname <- as.factor(febook$`Seed Name`)
-  ddata <- merge(febook, fdata, by=c('X', 'Y'), all.y=T)
+  ddata <- merge(febook, fdata, by=c('X', 'Y'), all=T)
   ddata$seedname <- droplevels(ddata$seedname)
+  ddata <- ddata[!is.na(ddata$seedname),]
   ddata$xy <- interaction(ddata$X, ddata$Y)
   ddata$time_f <- as.factor(ddata$time)
   ddata$Xf <- as.factor(ddata$X)
