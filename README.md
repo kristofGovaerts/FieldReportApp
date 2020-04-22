@@ -1,5 +1,7 @@
 # FieldReportApp
  For visualizing a field and generating markdown reports from GUI. Instructions for use are outlined below. Instructions should be followed sequentially, as each tab's output is dependent on what is defined in the previous tabs. 
+ 
+ This is a Shiny app that can be run from inside RStudio. Open *server.R* and click 'Run App'. 
 
  ## 1. Fieldmap tab
  ![Example](/Example01.PNG)
