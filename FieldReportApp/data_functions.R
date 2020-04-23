@@ -134,7 +134,7 @@ to_aucs <- function(spatsres) {
   }
 
 rescale_col <- function(col, r=c(1,9)) {
-  fn <- function(x) (((max(r)-min(r))/(max(col)-min(col)))*((x-max(col))))+max(r)
+  fn <- function(x) (((max(r, na.rm=T)-min(r, na.rm=T))/(max(col, na.rm=T)-min(col, na.rm=T)))*((x-max(col, na.rm=T))))+max(r, na.rm=T)
   return(sapply(col, fn))
 }
 
