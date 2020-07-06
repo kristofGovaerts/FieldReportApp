@@ -7,6 +7,10 @@ library(scales)
 #necessary formatting in ebook: 
 #series ID = 'Series Id'
 #field ID = 'Field Id'
+reverse <- function(r) {
+  #reverse a range, for inverting axes
+  return(1 - (r - max(r)))
+}
 
 data_columns <- function(plotdata) {
   #extract only those parameters that contain drone data, ie not time, X/Y etc

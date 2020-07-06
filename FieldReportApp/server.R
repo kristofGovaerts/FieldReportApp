@@ -123,6 +123,16 @@ server <- shinyServer(function(input, output, session) {
     plot_checks(ddata, input$ppar)
   }, width=400, height=400)
   
+  observeEvent(input$revX, {
+    req(adata$df2)
+    adata$df2$X <- reverse(adata$df2$X)
+  })
+  
+  observeEvent(input$revY, {
+    req(adata$ddata)
+    adata$df2$Y <- reverse(adata$df2$Y)
+  })
+  
   observeEvent(input$sspats, {
     req(adata$ddata)
     pl <- paste(input$parsL, input$typesL, sep='_')

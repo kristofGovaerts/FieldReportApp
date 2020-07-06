@@ -19,6 +19,9 @@ ui <- shinyUI(fluidPage(
       fileInput('file2', 'Plot data',
                 accept=c('.xlsx', '.xls', '.csv', '.txt')),
       tags$br(),
+      radioButtons("revX", "Reverse X-axis:", choices = c("No", "Yes")),
+      radioButtons("revY", "Reverse Y-axis:", choices = c("No", "Yes")),
+      tags$br(),
       fluidRow(column(4,
                       checkboxGroupInput('seriesL', 'Series: ', choices = NULL, selected = NULL),
                       checkboxGroupInput('timesL', 'Timepoints: ', choices = NULL, selected = NULL)
