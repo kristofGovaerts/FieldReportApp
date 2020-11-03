@@ -165,6 +165,7 @@ server <- shinyServer(function(input, output, session) {
     spats_raw <- consolidate_spatslist(spatslist)
     spats_temp <- to_long(spats_raw)
     spats_temp <- cbind(spats_temp, rescale_pars(spats_temp[,4:length(colnames(spats_temp))]))
+    spats_temp <- spats_temp[with(spats_temp, order(seedname, time)),]
     spats_auc <- to_aucs(spats_raw)
     spats_auc <- cbind(spats_auc, rescale_pars(spats_auc[,2:length(colnames(spats_auc))]))
     ofn <- paste(dirname(input$file1$datapath), 'SPATS_output.xlsx', sep='/')

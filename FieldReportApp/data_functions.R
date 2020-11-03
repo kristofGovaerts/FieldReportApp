@@ -52,8 +52,13 @@ spats_field <- function(df, tps, par, genotype='Seed', X='X', Y='Y', Xf='Xf', Yf
 spats_all <- function(df, tps, pars, genotype='Seed', X='X', Y='Y', Xf='Xf', Yf='Yf', gar=TRUE, nseg=c(15,15)) {
   asl <- list()
   for (i in 1:length(pars)) {
-    sf <- spats_field(df, tps, pars[i], genotype=genotype, X=X, Y=Y, Xf=Xf, Yf=Yf, gar=gar, nseg=nseg)
-    asl[[pars[i]]] <- sf
+    par <- pars[i]
+    timepoints <- unique(df[!is.na(df[[par]]),]$time)
+    print(paste(c("Parameter:", par)))
+    print(paste(c("Timepoints found:", timepoints)))
+    timepoints <- intersect(timepoints, tps)
+    sf <- spats_field(df, timepoints, par, genotype=genotype, X=X, Y=Y, Xf=Xf, Yf=Yf, gar=gar, nseg=nseg)
+    asl[[par]] <- sf
   }
   return(asl)
 }
