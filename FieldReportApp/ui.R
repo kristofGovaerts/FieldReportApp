@@ -21,6 +21,7 @@ ui <- shinyUI(fluidPage(
       tags$br(),
       radioButtons("revX", "Reverse X-axis:", choices = c("No", "Yes")),
       radioButtons("revY", "Reverse Y-axis:", choices = c("No", "Yes")),
+      radioButtons("perSeries", "Series x genotype?", choices = c("No", "Yes")),
       tags$br(),
       fluidRow(column(4,
                       checkboxGroupInput('seriesL', 'Series: ', choices = NULL, selected = NULL),

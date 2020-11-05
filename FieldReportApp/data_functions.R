@@ -96,9 +96,10 @@ fspats_to_pred <- function(fspats, par=NA) {
   return(out)
 }
 
-consolidate_spatslist <- function(spatslist, type="pred") {
+consolidate_spatslist <- function(spatslist, type="pred", bySeries=FALSE) {
   #type = "pred" or "blu*". note that blu* is BLUE if genotype != random, BLUP otherwise
-  outdf <- data.frame(levels(spatslist[[1]][[1]]$data$Seed)) #data frame should be the same for all spats
+  outdf <- data.frame(unique(spatslist[[1]][[1]]$data$Seed)) #data frame should be the same for all spats
+
   colnames(outdf) <- c('seedname')
   for (i in 1:length(spatslist)) {
     if (type == "pred") {

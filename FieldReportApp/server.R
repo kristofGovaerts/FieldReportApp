@@ -145,6 +145,10 @@ server <- shinyServer(function(input, output, session) {
       ss <- subset(adata$ddata, series %in% as.numeric(input$seriesL))} else {
         ss <- data.frame(adata$ddata)}
     
+    if (input$perSeries == "Yes") {
+      print("Combining series and seedname for SpATS.")
+      ss$Seed <- paste(ss$Seed, ss$Series, sep='_')}
+    
     adata$spats <- spats_all(ss, input$timesL, pl, gar = input$GaR, nseg = adata$segs)
   })
   
@@ -162,7 +166,11 @@ server <- shinyServer(function(input, output, session) {
   outputfile <- reactive({
     req(adata$spats)
     spatslist <- adata$spats
-    spats_raw <- consolidate_spatslist(spatslist)
+    if (input$perSeries == "Yes") {
+      spats_raw <- consolidate_spatslist(spatslist, bySeries=TRUE)
+    } else{
+      spats_raw <- consolidate_spatslist(spatslist)
+    }
     spats_temp <- to_long(spats_raw)
     spats_temp <- cbind(spats_temp, rescale_pars(spats_temp[,4:length(colnames(spats_temp))]))
     spats_temp <- spats_temp[with(spats_temp, order(seedname, time)),]
