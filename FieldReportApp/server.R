@@ -78,9 +78,14 @@ server <- shinyServer(function(input, output, session) {
   observe({
     req(adata$df1, adata$df2)
     adata$ddata <- prepare_data(adata$df1, adata$df2)
-    dims <-  c(max(adata$ddata$X) - min(adata$ddata$X), max(adata$ddata$Y) - min(adata$ddata$Y))
+    
+    if (length(input$seriesL) != length(levels(as.factor(adata$ddata$series)))) {
+      ss <- subset(adata$ddata, series %in% as.numeric(input$seriesL))} else {
+        ss <- data.frame(adata$ddata)}
+    
+    dims <-  c(max(ss$X) - min(ss$X), max(ss$Y) - min(ss$Y))
     adata$dims <- dims
-    adata$segs <- sapply(dims, function(x) if (x<9) {3} else if (x>45) {15} else {round(x/3)})
+    adata$segs <- sapply(dims, function(x) if (x<9) {3} else if (x>90) {30} else {round(x/3)})
   })
   
   observe({
