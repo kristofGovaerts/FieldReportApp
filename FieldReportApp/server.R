@@ -85,7 +85,7 @@ server <- shinyServer(function(input, output, session) {
     
     dims <-  c(max(ss$X) - min(ss$X), max(ss$Y) - min(ss$Y))
     adata$dims <- dims
-    adata$segs <- sapply(dims, function(x) if (x<9) {3} else if (x>90) {30} else {round(x/3)})
+    adata$segs <- sapply(dims, function(x) if (x<9) {3} else if (x>90) {30} else {round(x/4)})
   })
   
   observe({
@@ -120,13 +120,20 @@ server <- shinyServer(function(input, output, session) {
     ddata <- adata$ddata
 
     plot_data_column(ddata, input$ppar, as.numeric(input$stime))
-  }, width=400, height=400)
+  }, width=600, height=400)
   
   output$Fcheckplot <- renderPlot({
     req(adata$ddata)
     ddata <- subset(adata$ddata, (time %in% input$timesL) & (series %in% as.numeric(input$seriesL)))
     plot_checks(ddata, input$ppar)
-  }, width=400, height=400)
+  }, width=600, height=400)
+  
+  output$FDiscrimplot <- renderPlot({
+    req(adata$ddata)
+    pl <- paste(input$parsL, input$typesL, sep='_')
+    ddata <- subset(adata$ddata, (time %in% input$timesL) & (series %in% as.numeric(input$seriesL)))
+    plot_check_discrimination(ddata, pl)
+  }, width=600, height=400)
   
   observeEvent(input$revX, {
     req(adata$df2)
@@ -134,7 +141,8 @@ server <- shinyServer(function(input, output, session) {
   })
   
   observeEvent(input$revY, {
-    req(adata$ddata)
+    req(adata$df2)
+    
     adata$df2$Y <- reverse(adata$df2$Y)
   })
   

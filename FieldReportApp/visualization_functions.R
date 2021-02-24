@@ -2,6 +2,7 @@ library(ggplot2)
 library(scales)
 library(colormap)
 library(ggpubr)
+library(rlang)
 
 colors <- c(colormap()[1], colormap()[36], colormap()[72]) #the lowest, middle and highest colors of the viridis colormap
 
@@ -29,10 +30,49 @@ plot_fieldmap <- function (febook, include='ALL'){
 }
 
 plot_checks <- function(ddata, par) {
+  ddata$seedname <- as.factor(ddata$seedname)
   cd <- subset(ddata, standard == 'Y')
   cd$seedname <- droplevels(cd$seedname)
   cd <- cd[!is.na(cd[par]),] #remove empties
   print(ggline(data=cd, x='time', y=par, add = c("median_iqr"), color = "seedname", palette = "jco", numeric.x.axis=T))
+}
+
+plot_check_discrimination <- function(df, pars, time_col='time', check_col='standard', group_col='seedname') {
+  l <- list()
+  tps <- sort(unique(df[,time_col]))
+  
+  for (tpn in 1:length(tps)) {
+    tp <- tps[tpn]
+    
+    dft <- filter(df, !!sym(time_col)==tp)
+    
+    dft %>%
+      filter(!!sym(check_col)=='Y') %>%
+      dplyr::group_by(!!sym(group_col)) %>%
+      summarize_at(pars, mean) %>%
+      ungroup() %>% dplyr::select(pars) %>% summarize_all(var) -> vars_1
+    
+    dft2 <- data.frame(dft)
+    gc <- dft2[,c(group_col, check_col)]
+    set.seed(15) 
+    gc2 <- gc[sample(nrow(gc)),]
+    dft2[,c(group_col, check_col)] <- gc2
+    
+    dft2 %>%
+      filter(!!sym(check_col)=='Y') %>%
+      dplyr::group_by(!!sym(group_col)) %>%
+      summarize_at(pars, mean) %>%
+      ungroup() %>% dplyr::select(pars) %>% summarize_all(var) -> vars_2
+    
+    l[[tpn]] <- vars_1/vars_2
+  }
+  ldf <- data.frame(matrix(unlist(l), nrow=length(l), byrow=TRUE))
+  colnames(ldf) <- pars
+  ldf$time <- as.numeric(tps)
+  ldf <- pivot_longer(ldf, pars)
+  
+  p <- ggplot(ldf, aes(x=time, y=value)) + geom_line(aes(color=name), size=2) + theme_bw() + ylab("Discrimination") + theme(legend.position='bottom')
+  print(p)
 }
 
 plot_data_column <- function (data, column, timepoint) {
