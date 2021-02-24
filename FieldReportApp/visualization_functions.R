@@ -71,7 +71,7 @@ plot_check_discrimination <- function(df, pars, time_col='time', check_col='stan
   ldf$time <- as.numeric(tps)
   ldf <- pivot_longer(ldf, pars)
   
-  p <- ggplot(ldf, aes(x=time, y=value)) + geom_line(aes(color=name), size=2) + theme_bw() + ylab("Discrimination") + theme(legend.position='bottom')
+  p <- ggplot(ldf, aes(x=time, y=log10(value))) + geom_line(aes(color=name), size=2) + theme_bw() + ylab("log10(Discrimination)") + theme(legend.position='bottom')
   print(p)
 }
 
