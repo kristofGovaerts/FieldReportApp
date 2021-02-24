@@ -9,7 +9,8 @@ library(scales)
 #field ID = 'Field Id'
 reverse <- function(r) {
   #reverse a range, for inverting axes
-  return(rev(r))
+  out <- rescale(r, c(max(r), min(r)))
+  return(out) 
 }
 
 data_columns <- function(plotdata) {
