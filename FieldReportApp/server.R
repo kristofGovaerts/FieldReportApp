@@ -190,6 +190,13 @@ server <- shinyServer(function(input, output, session) {
     spats_auc <- to_aucs(spats_raw)
     spats_auc <- cbind(spats_auc, rescale_pars(spats_auc[,2:length(colnames(spats_auc))]))
     ofn <- paste(dirname(input$file1$datapath), 'SPATS_output.xlsx', sep='/')
+    
+    if (input$perSeries == "Yes") {
+      spats_raw <- separate(data = spats_raw, col = seedname, into = c("seedname", "series"), sep = "_")
+      spats_temp <- separate(data = spats_temp, col = seedname, into = c("seedname", "series"), sep = "_")
+      spats_auc <- separate(data = spats_auc, col = seedname, into = c("seedname", "series"), sep = "_")
+    }
+    
     print("Saving to:")
     print(ofn)
     olist <- list("Raw" = spats_raw, "Preds" = spats_temp, "AUDPC" = spats_auc)

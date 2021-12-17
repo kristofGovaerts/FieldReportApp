@@ -8,6 +8,7 @@
 library(shiny)
 library(readxl)
 library(openxlsx)
+require(SpATS)
 
 options(shiny.maxRequestSize = 30*1024^2) #upload size = 30MB
 
