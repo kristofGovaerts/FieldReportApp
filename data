@@ -1,0 +1,6 @@
+Number of unique seednames: 3146
+Timepoints selected: c("0", "11", "25", "34", "62", "77", "89", "109")
+Parameters selected: c("cigreen", "cirededge", "cover", "mcari", "ndre", "ndvi", "plantheight", "psri", "tdvi")
+Field dimensions: 463 x 11
+SpATS segments: c(30, 3)
+Total SpATS analyses: 72

@@ -82,6 +82,30 @@ fspats_to_BLUE <- function(fspats) {
   return(df)
 }
 
+retrieve_spats_plotstats <- function(spatslist) {
+  # this function gets raw plot stats and arranges together with corrected plot stats.
+  pars <- names(spatslist)
+  base_frame <- spatslist[[1]][[1]]$data[c('seedname', 'series', 'X', 'Y')]
+  outlist <- list()
+  
+  for (par in pars) {
+    tps <- names(spatslist[[par]])
+    tlist <- list()
+    for (tp in tps){
+      f <- data.frame(base_frame)
+      f$time <- tp
+      f[[par]] <- spatslist[[par]][[tp]]$data[[par]]
+      f[[paste(par, 'corr', sep='_')]] <- spatslist[[par]][[tp]]$fitted
+      tlist[[tp]] <- f
+    }
+    par_f <- Reduce(rbind, tlist)
+    outlist[[par]] <- par_f
+  }
+  
+  outlist %>% 
+    reduce(full_join, by=c('X', 'Y', 'seedname', 'series', 'time')) -> out
+}
+
 fspats_to_pred <- function(fspats, par=NA) {
   for (i in 1:length(fspats)){
     spats <- fspats[[i]]

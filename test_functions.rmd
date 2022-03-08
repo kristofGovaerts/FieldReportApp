@@ -1,0 +1,121 @@
+---
+title: "test_functions"
+author: "Kristof Govaerts"
+date: "8-3-2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(shiny)
+library(readxl)
+library(openxlsx)
+require(SpATS)
+source(file = 'FieldReportApp\\data_functions.R')
+source(file = 'FieldReportApp\\visualization_functions.R')
+
+f1 <- 'test_files\\ebook.xlsx'
+f2 <- 'test_files\\plotstats.csv'
+```
+
+
+```{r load & prepare data}
+df1 <- read_excel(f1)
+df2 <- read.table(f2, sep="\t", dec=".", 
+                       header=TRUE, stringsAsFactors = FALSE)
+
+series <- levels(as.factor(df1$'Series Id'))
+times <- levels(as.factor(df2$time))
+pl <- data_columns(df2)
+pars <- pl[[1]]
+types <- pl[[2]]
+c_pars <- paste(pars, types, sep='_')
+
+df <- prepare_data(df1, df2)
+
+if (length(series) != length(levels(as.factor(df$series)))) {
+  ss <- subset(df, series %in% as.numeric(series))} else {
+    ss <- data.frame(df)}
+
+dims <-  c(max(ss$X) - min(ss$X), max(ss$Y) - min(ss$Y))
+dims <- dims
+segs <- sapply(dims, function(x) if (x<9) {3} else if (x>90) {30} else {round(x/4)})
+```
+
+```{r test fieldmap}
+plot_fieldmap(df1, series)
+```
+
+```{r test fieldmap}
+plot_fieldmap(df1, series)
+```
+
+```{r test html output}
+s0 <- paste("Number of unique seednames:", length(levels(df$Seed)))
+s1 <- paste("Timepoints selected:", list(times))
+s2 <- paste("Parameters selected:", list(pars))
+s3 <- paste("Field dimensions:", dims[1], "x",dims[2])
+s4 <- paste("SpATS segments:", list(segs))
+s5 <- paste("Total SpATS analyses:", length(times) * length(pars))
+writeLines(paste(s0, s1,s2,s3,s4,s5, sep = '\n'))  # newline instead of <br>
+```
+```{r test plot column}
+plot_data_column(df, 'ndvi_mean', times[3])
+```
+```{r test plot checks}
+ddata <- subset(df, (time %in% times) & (series %in% as.numeric(series)))
+plot_checks(ddata, 'ndvi_mean')
+```
+
+```{r test discrimination plot}
+pl <- paste(pars, types, sep='_')
+ddata <- subset(df, (time %in% times) & (series %in% as.numeric(series)))
+plot_check_discrimination(ddata, pl)
+```
+
+```{r test spats}
+ps = c('ndvi', 'ndre')
+pl <- paste(ps, c('mean'), sep='_')
+perSeries = 'Yes'
+tps = times[1:4]
+gar = TRUE
+sl = c('1111')
+
+if (length(sl) != length(levels(as.factor(df$series)))) {
+  ss <- subset(df, series %in% as.numeric(sl))} else {
+    ss <- data.frame(df)}
+
+if (perSeries == "Yes") {
+  print("Combining series and seedname for SpATS.")
+  ss$Seed <- paste(ss$Seed, ss$Series, sep='_')}
+
+spatslist <- spats_all(ss, tps, pl, gar = gar, nseg = segs)
+```
+
+```{r test spats plot}
+plot(spatslist[['ndvi_mean']][[times[3]]])
+print(paste("Heritability:", getHeritability(spatslist[['ndvi_mean']][[times[3]]])))
+```
+
+```{r test spats output generation}
+if (perSeries == "Yes") {
+  spats_raw <- consolidate_spatslist(spatslist, bySeries=TRUE)
+} else{
+  spats_raw <- consolidate_spatslist(spatslist)
+}
+
+spats_temp <- to_long(spats_raw)
+spats_temp <- cbind(spats_temp, rescale_pars(spats_temp[,4:length(colnames(spats_temp))]))
+spats_temp <- spats_temp[with(spats_temp, order(seedname, time)),]
+spats_auc <- to_aucs(spats_raw)
+spats_auc <- cbind(spats_auc, rescale_pars(spats_auc[,2:length(colnames(spats_auc))]))
+
+spats_plotstats <- retrieve_spats_plotstats(spatslist)
+
+if (perSeries == "Yes") {
+  spats_raw <- separate(data = spats_raw, col = seedname, into = c("seedname", "series"), sep = "_")
+  spats_temp <- separate(data = spats_temp, col = seedname, into = c("seedname", "series"), sep = "_")
+  spats_auc <- separate(data = spats_auc, col = seedname, into = c("seedname", "series"), sep = "_")
+}
+
+olist <- list("Raw" = spats_raw, "Preds" = spats_temp, "AUDPC" = spats_auc, "Plotstats" = spats_plotstats)
+```

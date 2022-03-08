@@ -184,6 +184,8 @@ server <- shinyServer(function(input, output, session) {
     } else{
       spats_raw <- consolidate_spatslist(spatslist)
     }
+    
+    spats_plotstats <- retrieve_spats_plotstats(spatslist)
     spats_temp <- to_long(spats_raw)
     spats_temp <- cbind(spats_temp, rescale_pars(spats_temp[,4:length(colnames(spats_temp))]))
     spats_temp <- spats_temp[with(spats_temp, order(seedname, time)),]
@@ -199,7 +201,7 @@ server <- shinyServer(function(input, output, session) {
     
     print("Saving to:")
     print(ofn)
-    olist <- list("Raw" = spats_raw, "Preds" = spats_temp, "AUDPC" = spats_auc)
+    olist <- list("Plotstats" = spats_plotstats, "Raw" = spats_raw, "Preds" = spats_temp, "AUDPC" = spats_auc)
     return(olist)
   })
   
