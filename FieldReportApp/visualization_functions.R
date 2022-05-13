@@ -10,7 +10,7 @@ colors <- c(colormap()[1], colormap()[36], colormap()[72]) #the lowest, middle a
 #series ID = 'Series Id'
 #field ID = 'Field Id'
 
-plot_fieldmap <- function (febook, include='ALL'){
+plot_fieldmap <- function (febook, include='ALL', show_seedname=FALSE){
   febt <- data.frame(febook)
   febt$series <- as.factor(febt$Series.Id)
   series_stats <- aggregate(. ~ series, data = febt[,c('series','X','Y')], mean)
@@ -26,6 +26,11 @@ plot_fieldmap <- function (febook, include='ALL'){
     geom_label(data=series_stats, aes(x=X, y=Y, label=series)) +
     scale_y_continuous(breaks=pretty_breaks(n = 10)) + scale_x_continuous(breaks=pretty_breaks(n = 10)) +
     theme(panel.background = element_blank(), legend.position = 'none')
+  
+  if (show_seedname) {
+    febt$seed <- febt$`Seed Name`
+    p <- p + geom_text(aes(x=X, y=Y, label=seed), angle=90, size=3)
+  }
   return(p)
 }
 
